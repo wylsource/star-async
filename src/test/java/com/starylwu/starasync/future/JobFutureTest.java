@@ -1,111 +1,53 @@
 package com.starylwu.starasync.future;
 
-import com.starylwu.starasync.pool.JobFuture;
 import org.junit.Test;
 
+import java.time.Duration;
+import java.time.Instant;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
 /**
- * @Auther: Wuyulong
- * @Date: 2019/1/26 14:33
- * @Description:
+ * @author wuyulong
+ * @date 2019/1/29
+ * @desc 测试
  */
 public class JobFutureTest {
+
     private static Executor executor = Executors.newWorkStealingPool(5);
-
     @Test
-    public void supplyAsync() throws ExecutionException, InterruptedException {
-        Long start = System.currentTimeMillis();
-        JobFuture<String> job1 = JobFuture.supplyAsync(() -> {
+    public void asnycSupply() throws ExecutionException, InterruptedException {
+        JobFuture.setExecutor(executor);
+        Instant start = Instant.now();
+        JobFuture<String> supply1 = JobFuture.supply(() -> {
             try {
-                System.out.println("Thread Name=[ " + Thread.currentThread().getName() + " ]");
-                Thread.sleep(100);
+                Thread.sleep(200);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
-            return "job1";
-        }, executor);
+            return "supply1";
+        });
 
-        JobFuture<String> job2 = JobFuture.supplyAsync(() -> {
+        JobFuture<String> supply2 = JobFuture.supply(() -> {
             try {
-                System.out.println("Thread Name=[ " + Thread.currentThread().getName() + " ]");
-                Thread.sleep(100);
+                Thread.sleep(200);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
-            return "job2";
-        }, executor);
+            return "supply2";
+        });
 
-        JobFuture<String> job3 = JobFuture.supplyAsync(() -> {
+        JobFuture<String> supply3 = JobFuture.supply(() -> {
             try {
-                System.out.println("Thread Name=[ " + Thread.currentThread().getName() + " ]");
-                Thread.sleep(100);
+                Thread.sleep(200);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
-            return "job3";
-        }, executor);
+            return "supply3";
+        });
 
-        JobFuture<String> job4 = JobFuture.supplyAsync(() -> {
-            try {
-                System.out.println("Thread Name=[ " + Thread.currentThread().getName() + " ]");
-                Thread.sleep(100);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-            return "job4";
-        }, executor);
-
-        System.out.println(job1.get() + job2.get() + job3.get() + job4.get());
-        System.out.println("use time = " + (System.currentTimeMillis() - start));
-    }
-
-    @Test
-    public void thenApplyAsync() throws ExecutionException, InterruptedException {
-        Long start = System.currentTimeMillis();
-        JobFuture<String> job1 = JobFuture.supplyAsync(() -> {
-            try {
-                System.out.println("Thread Name=[ " + Thread.currentThread().getName() + " ]");
-                Thread.sleep(100);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-            return "job1";
-        }, executor).thenApplyAsync(str -> str + "then ");
-
-        JobFuture<String> job2 = JobFuture.supplyAsync(() -> {
-            try {
-                System.out.println("Thread Name=[ " + Thread.currentThread().getName() + " ]");
-                Thread.sleep(100);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-            return "job2";
-        }, executor).thenApplyAsync(str -> str + "then ");
-
-        JobFuture<String> job3 = JobFuture.supplyAsync(() -> {
-            try {
-                System.out.println("Thread Name=[ " + Thread.currentThread().getName() + " ]");
-                Thread.sleep(100);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-            return "job3";
-        }, executor).thenApplyAsync(str -> str + "then ");
-
-        JobFuture<Integer> job4 = JobFuture.supplyAsync(() -> {
-            try {
-                System.out.println("Thread Name=[ " + Thread.currentThread().getName() + " ]");
-                Thread.sleep(100);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-            return "job4";
-        }, executor).thenApplyAsync(str -> str.length());
-
-        System.out.println(job1.get() + job2.get() + job3.get() + job4.get());
-        System.out.println("use time = " + (System.currentTimeMillis() - start));
+        System.out.println(supply1.get() + ", " + supply2.get() + ", " + supply3.get() + ", ");
+        System.out.println("use time = " + Duration.between(start, Instant.now()).toMillis());
     }
 }
