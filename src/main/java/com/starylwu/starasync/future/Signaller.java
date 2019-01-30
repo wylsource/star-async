@@ -4,11 +4,19 @@ import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.locks.LockSupport;
 
 @SuppressWarnings("serial")
-final class Signaller extends Completion
-    implements ForkJoinPool.ManagedBlocker {
-    long nanos;                    // wait time if timed
-    final long deadline;           // non-zero if timed
-    volatile int interruptControl; // > 0: interruptible, < 0: interrupted
+final class Signaller extends AbstractCompletion implements ForkJoinPool.ManagedBlocker {
+    /**
+     * wait time if timed
+     */
+    long nanos;
+    /**
+     * non-zero if timed
+     */
+    final long deadline;
+    /**
+     * > 0: interruptible, < 0: interrupted
+     */
+    volatile int interruptControl;
     volatile Thread thread;
 
     Signaller(boolean interruptible, long nanos, long deadline) {
@@ -20,7 +28,8 @@ final class Signaller extends Completion
 
     @Override
     final JobFuture<?> tryFire(int ignore) {
-        Thread w; // no need to atomically claim
+        // no need to atomically claim
+        Thread w;
         if ((w = thread) != null) {
             thread = null;
             LockSupport.unpark(w);
@@ -63,5 +72,7 @@ final class Signaller extends Completion
     }
 
     @Override
-    final boolean isLive() { return thread != null; }
+    final boolean isLive() {
+        return thread != null;
+    }
 }

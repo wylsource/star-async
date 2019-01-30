@@ -3,10 +3,10 @@ package com.starylwu.starasync.future;
 import java.util.concurrent.ForkJoinTask;
 
 @SuppressWarnings("serial")
-abstract class Completion extends ForkJoinTask<Void>
+abstract class AbstractCompletion extends ForkJoinTask<Void>
     implements Runnable, AsynchronousCompletionJob {
 
-    volatile Completion next;
+    volatile AbstractCompletion next;
 
     /**
      * Performs completion action if triggered, returning a

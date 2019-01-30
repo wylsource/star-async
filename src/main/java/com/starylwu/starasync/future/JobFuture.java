@@ -8,14 +8,16 @@ import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
-import java.util.concurrent.atomic.AtomicStampedReference;
+import java.util.function.Function;
 import java.util.function.Supplier;
 
 /**
  * @author wuyulong
  * @date 2019/1/29
  * @desc 任务工作实现
- * 函数介绍：1.Supplier 是一个工厂，里面只有一个get方法，用于获取结果，作为一个方法链的第一个方法参数较适合，因为该函数不需要入参，第一个方法一般情况下也没有参数的。
+ * 函数介绍：
+ * 1.Supplier 是一个工厂，里面只有一个get方法，用于获取结果，作为一个方法链的第一个方法参数较适合，因为该函数不需要入参，第一个方法一般情况下也没有参数的。
+ * 2.Function 是一个函数，里面有个apply方法，用户接受参数，并且返回结果，用于方法链中的中间方法参数较合适。接受上个方法的返回值并返回当前方法的执行结果
  */
 public class JobFuture<T> implements Future<T>, JobStage<T> {
 
@@ -29,7 +31,7 @@ public class JobFuture<T> implements Future<T>, JobStage<T> {
      */
     volatile Object result ;
 
-    volatile Completion stack;
+    volatile AbstractCompletion stack;
 
     private static final sun.misc.Unsafe UNSAFE;
     private static final long RESULT;
@@ -43,7 +45,7 @@ public class JobFuture<T> implements Future<T>, JobStage<T> {
             RESULT = u.objectFieldOffset(k.getDeclaredField("result"));
             STACK = u.objectFieldOffset(k.getDeclaredField("stack"));
             NEXT = u.objectFieldOffset
-                    (Completion.class.getDeclaredField("next"));
+                    (AbstractCompletion.class.getDeclaredField("next"));
         } catch (Exception x) {
             throw new Error(x);
         }
@@ -69,8 +71,13 @@ public class JobFuture<T> implements Future<T>, JobStage<T> {
         //there must new object...
         JobFuture<U> depFuture = new JobFuture<>();
         //use thread pool exec
-        executor.execute(new AsnycSupply<>(depFuture, supplier));
+        executor.execute(new Supply<>(depFuture, supplier));
         return depFuture;
+    }
+
+    public <U> JobFuture<U> then(Function<? super T, ? extends U> function){
+
+        return null;
     }
 
     /**
@@ -194,8 +201,6 @@ public class JobFuture<T> implements Future<T>, JobStage<T> {
             }
             else if (q.thread != null && result == null) {
                 try {
-                    System.out.println("managedBlock");
-                    Thread.sleep(10);
                     ForkJoinPool.managedBlock(q);
                 } catch (InterruptedException ie) {
                     q.interruptControl = -1;
@@ -219,10 +224,10 @@ public class JobFuture<T> implements Future<T>, JobStage<T> {
     }
 
     final void postComplete() {
-        JobFuture<?> f = this; Completion h;
+        JobFuture<?> f = this; AbstractCompletion h;
         while ((h = f.stack) != null ||
                 (f != this && (h = (f = this).stack) != null)) {
-            JobFuture<?> d; Completion t;
+            JobFuture<?> d; AbstractCompletion t;
             if (f.casStack(h, t = h.next)) {
                 if (t != null) {
                     if (f != this) {
@@ -238,8 +243,8 @@ public class JobFuture<T> implements Future<T>, JobStage<T> {
     }
 
     final void cleanStack() {
-        for (Completion p = null, q = stack; q != null;) {
-            Completion s = q.next;
+        for (AbstractCompletion p = null, q = stack; q != null;) {
+            AbstractCompletion s = q.next;
             if (q.isLive()) {
                 p = q;
                 q = s;
@@ -262,21 +267,26 @@ public class JobFuture<T> implements Future<T>, JobStage<T> {
         }
     }
 
-    final boolean tryPushStack(Completion c) {
-        Completion h = stack;
+    final boolean tryPushStack(AbstractCompletion c) {
+        AbstractCompletion h = stack;
         lazySetNext(c, h);
         return UNSAFE.compareAndSwapObject(this, STACK, h, c);
     }
 
-    final void pushStack(Completion c) {
+    final void pushStack(AbstractCompletion c) {
         do {} while (!tryPushStack(c));
     }
 
-    static void lazySetNext(Completion c, Completion next) {
+    static void lazySetNext(AbstractCompletion c, AbstractCompletion next) {
         UNSAFE.putOrderedObject(c, NEXT, next);
     }
 
-    final boolean casStack(Completion cmp, Completion val) {
+    final boolean casStack(AbstractCompletion cmp, AbstractCompletion val) {
         return UNSAFE.compareAndSwapObject(this, STACK, cmp, val);
     }
+
+
+    //-------------------内部类-------------
+
+
 }

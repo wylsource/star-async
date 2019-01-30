@@ -8,7 +8,7 @@ import java.util.function.Supplier;
  * @date 2019/1/29
  * @desc 线程池需要执行的任务扩展(没有入参)
  */
-class AsnycSupply<T> extends ForkJoinTask<Void> implements Runnable, AsynchronousCompletionJob {
+class Supply<T> extends ForkJoinTask<Void> implements Runnable, AsynchronousCompletionJob {
 
     /**
      * 依赖的JobFuture
@@ -20,7 +20,7 @@ class AsnycSupply<T> extends ForkJoinTask<Void> implements Runnable, Asynchronou
      */
     private Supplier<T> job;
 
-    public AsnycSupply(JobFuture<T> depFuture, Supplier<T> job) {
+    public Supply(JobFuture<T> depFuture, Supplier<T> job) {
         this.depFuture = depFuture;
         this.job = job;
     }
