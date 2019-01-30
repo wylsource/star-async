@@ -1,6 +1,6 @@
-package com.starylwu.starasync.pool;
+package com.starylwu.starasync.rewrite;
 
-import com.starylwu.starasync.pool.JobFuture;
+import com.starylwu.starasync.rewrite.JobFuture;
 import org.junit.Test;
 
 import java.util.concurrent.ExecutionException;

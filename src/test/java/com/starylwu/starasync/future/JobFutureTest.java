@@ -7,6 +7,7 @@ import java.time.Instant;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ForkJoinPool;
 
 /**
  * @author wuyulong
@@ -46,6 +47,8 @@ public class JobFutureTest {
             }
             return "supply3";
         });
+
+        ForkJoinPool forkJoinPool = ForkJoinPool.commonPool();
 
         System.out.println(supply1.get() + ", " + supply2.get() + ", " + supply3.get() + ", ");
         System.out.println("use time = " + Duration.between(start, Instant.now()).toMillis());
