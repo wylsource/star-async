@@ -14,21 +14,27 @@ import java.util.concurrent.atomic.AtomicLong;
  */
 public class ParentThreadPool extends ThreadPoolExecutor {
 
-    private BlockingQueue<Runnable> workQueue;
-
     public ParentThreadPool(int corePoolSize, int maximumPoolSize, long keepAliveTime, TimeUnit unit, BlockingQueue<Runnable> workQueue, ThreadFactory threadFactory) {
-        super(corePoolSize, maximumPoolSize, keepAliveTime, unit, workQueue, threadFactory, new MainThreadRunHander());
-        this.workQueue = workQueue;
+        super(corePoolSize, maximumPoolSize, keepAliveTime, unit, workQueue, threadFactory, new MainThreadRunHandler());
     }
 
 
     @Override
     protected void beforeExecute(Thread t, Runnable r) {
+        if (r instanceof TaskNameRunnable){
+            t.setName(((TaskNameRunnable) r).getTaskName());
+        }
         super.beforeExecute(t, r);
     }
 
     @Override
     protected void afterExecute(Runnable r, Throwable t) {
+        if (r instanceof TaskNameRunnable){
+            int status = ((TaskNameRunnable) r).getStatus();
+            if (status < 0){
+                System.out.println("===== " + ((TaskNameRunnable) r).getTaskName() + " is failure.");
+            }
+        }
         super.afterExecute(r, t);
     }
 
@@ -37,10 +43,10 @@ public class ParentThreadPool extends ThreadPoolExecutor {
      * @return
      */
     public int getWorkQueueSize(){
-        return workQueue.size();
+        return getQueue().size();
     }
 
-    static class MainThreadRunHander implements RejectedExecutionHandler{
+    static class MainThreadRunHandler implements RejectedExecutionHandler{
         private static AtomicLong rejectedCount = new AtomicLong();
 
         /**
@@ -58,7 +64,6 @@ public class ParentThreadPool extends ThreadPoolExecutor {
     }
 
     public long getRejectedCount(){
-        return MainThreadRunHander.rejectedCount.get();
+        return MainThreadRunHandler.rejectedCount.get();
     }
-
 }

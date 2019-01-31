@@ -2,9 +2,7 @@ package com.starylwu.starasync.pool;
 
 import org.junit.Test;
 
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.ThreadFactory;
@@ -36,12 +34,13 @@ public class PoolTest {
         AtomicInteger count = new AtomicInteger(0);
         while (count.get()<10000){
             int c = count.getAndIncrement();
-            pool.execute(() -> {
-                try {
-                    map.put(c, c);
+            pool.execute(new TaskNameRunnable("testJob" + c) {
+                @Override
+                public void job() throws Exception {
+                    if (c%9 == 0){
+                        throw new RuntimeException("ex");
+                    }
                     Thread.sleep(50);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
                 }
             });
             try {

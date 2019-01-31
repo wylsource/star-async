@@ -1,7 +1,5 @@
 package com.starylwu.starasync.pool;
 
-import java.util.concurrent.Executor;
-import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
@@ -28,7 +26,7 @@ public class ThreadPoolMonitor {
             int activeThreadCount = pool.getActiveCount();
             long completedTaskCount = pool.getCompletedTaskCount();
             //监控线程池数据并报警(发送邮件和钉钉)
-            //计算每10秒的曾速
+            //计算每10秒的增速
             System.out.println("taskCount=" + (taskCount - this.taskCount)/10);
             this.taskCount = taskCount;
             System.out.println("rejectedCount=" + (rejectedCount - this.rejectedCount)/10);
